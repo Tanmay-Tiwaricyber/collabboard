@@ -168,7 +168,8 @@ await drag(420, 120, 620, 280);
 let els = useBoard.getState().elements;
 const rectEl = els.find((e) => e.type === 'rectangle');
 check('rectangle created', !!rectEl);
-check('selection after draw', useBoard.getState().app.selection.length === 1);
+// with a sticky tool the finished shape is not grabbed, so the next drag draws
+check('sticky draw leaves nothing selected', useBoard.getState().app.selection.length === 0);
 
 // 3) arrow binds to the rectangle
 await act(async () => { tool('a'); });
@@ -421,6 +422,50 @@ await act(async () => {
 });
 await flush(20);
 check('present mode closed', win.document.querySelector('.present-overlay') === null);
+
+// 20) sticky tools: pen/pencil keep drawing stroke after stroke
+await act(async () => { tool('Escape'); });
+await flush(10);
+await act(async () => { tool('p'); });
+check('pen tool selected', useBoard.getState().app.tool === 'pen');
+const inkBefore = useBoard.getState().elements.filter((e) => e.type === 'freedraw').length;
+await drag(150, 620, 260, 700);
+await flush(10);
+check('pen stays active after first stroke', useBoard.getState().app.tool === 'pen', useBoard.getState().app.tool);
+await drag(280, 620, 400, 700);
+await flush(10);
+check('pen stays active after second stroke', useBoard.getState().app.tool === 'pen', useBoard.getState().app.tool);
+check('two strokes drew two elements', useBoard.getState().elements.filter((e) => e.type === 'freedraw').length === inkBefore + 2,
+  `${inkBefore} -> ${useBoard.getState().elements.filter((e) => e.type === 'freedraw').length}`);
+check('no selection lingers while drawing', useBoard.getState().app.selection.length === 0);
+
+// pencil
+await act(async () => { tool('b'); });
+await drag(430, 620, 520, 700);
+check('pencil stays active', useBoard.getState().app.tool === 'pencil', useBoard.getState().app.tool);
+
+// shapes stay active too
+await act(async () => { tool('r'); });
+await drag(560, 600, 660, 680);
+await drag(700, 600, 800, 680);
+await flush(10);
+check('rectangle tool stays active', useBoard.getState().app.tool === 'rectangle', useBoard.getState().app.tool);
+
+// explicit escape back to select, then it stays on select
+await act(async () => { win.dispatchEvent(new win.KeyboardEvent('keydown', { key: 'Escape', bubbles: true })); });
+await flush(10);
+check('Escape returns to Select', useBoard.getState().app.tool === 'select', useBoard.getState().app.tool);
+await act(async () => { tool('v'); });
+await drag(860, 600, 900, 640);
+check('select tool does not become a drawing tool', useBoard.getState().app.tool === 'select');
+
+// opting into auto-switch still works when the user wants it
+useBoard.getState().setApp({ lockTool: false });
+await act(async () => { tool('p'); });
+await drag(200, 720, 300, 760);
+await flush(10);
+check('auto-switch mode still available', useBoard.getState().app.tool === 'select', useBoard.getState().app.tool);
+useBoard.getState().setApp({ lockTool: true });
 
 console.log('\ndraw calls:', JSON.stringify(drawCalls));
 console.log(fails ? `${fails} FAILURES` : 'DOM smoke passed');

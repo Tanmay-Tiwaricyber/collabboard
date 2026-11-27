@@ -50,7 +50,8 @@ export const DEFAULT_APP_STATE: Pick<
 
 const initialApp: AppState = {
   tool: 'select',
-  lockTool: false,
+  // Tools stay active after a stroke/shape until the user picks another one.
+  lockTool: true,
   ...DEFAULT_APP_STATE,
   textAlign: 'left',
   edgeStyle: 'round',
@@ -316,6 +317,13 @@ function savePrefs(app: AppState) {
 
 const prefs = loadPrefs();
 
+/**
+ * Saved prefs from older builds may carry `lockTool: false`, which used to make
+ * every tool snap back to Select after one stroke. Tools are sticky now, so the
+ * stored value is ignored and the current default wins.
+ */
+const EDIT_LOCK_OVERRIDE = { lockTool: initialApp.lockTool };
+
 function newBoardId() {
   return nanoid(10);
 }
@@ -330,6 +338,7 @@ export const useBoard = create<BoardStore>((set, get) => ({
   app: {
     ...initialApp,
     ...(prefs ?? {}),
+    ...EDIT_LOCK_OVERRIDE,
   },
   elements: [],
   boardId: newBoardId(),

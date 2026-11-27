@@ -2,6 +2,7 @@ import { X } from 'lucide-react';
 
 const SHORTCUTS: [string, string][] = [
   ['V', 'Select / move'],
+  ['Esc', 'Back to Select (tools stay active while drawing)'],
   ['H', 'Pan (or hold Space)'],
   ['P', 'Pen — pressure-sensitive ink'],
   ['B', 'Pencil — thin, textured'],

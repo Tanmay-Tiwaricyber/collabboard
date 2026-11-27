@@ -1049,6 +1049,9 @@ export default function Canvas() {
           selection: nextSel,
           tool: a.lockTool ? a.tool : 'select',
         });
+        // With a sticky tool the next gesture should draw again, not grab the
+        // element we just finished.
+        if (a.lockTool) st.setApp({ selection: [] });
         if (el.type === 'frame') {
           const bounds = elementBounds(el);
           const inside = elementsRef.current.filter(
@@ -1382,7 +1385,9 @@ export default function Canvas() {
         return;
       }
       if (e.key === 'Escape') {
-        st.setApp({ selection: [], editingId: null });
+        // Escape is the explicit way out of a sticky tool.
+        const backToSelect = !['select', 'hand'].includes(a.tool);
+        st.setApp({ selection: [], editingId: null, ...(backToSelect ? { tool: 'select' as const } : {}) });
         setMenu(null);
         setEditing(null);
         return;

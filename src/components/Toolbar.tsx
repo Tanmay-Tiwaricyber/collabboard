@@ -111,11 +111,18 @@ export default function Toolbar() {
         <button
           className={`tool-btn ${lockTool ? 'active' : ''}`}
           onClick={() => setApp({ lockTool: !lockTool })}
-          title={lockTool ? 'Unlock tool (stay on tool after drawing)' : 'Lock tool'}
-          aria-label="Lock tool"
+          title={
+            lockTool
+              ? 'Tool stays active after each stroke — click to switch back to Select automatically'
+              : 'Tools switch back to Select after each stroke — click to keep them active'
+          }
+          aria-label="Keep tool active"
+          aria-pressed={lockTool}
         >
           {lockTool ? <Lock size={18} /> : <Unlock size={18} />}
-          <span className="tool-tip">{lockTool ? 'Tool locked' : 'Lock current tool'}</span>
+          <span className="tool-tip">
+            {lockTool ? 'Tool stays active' : 'Switch to Select after drawing'}
+          </span>
         </button>
         <button
           className={`tool-btn ${showPresent ? 'active' : ''}`}
