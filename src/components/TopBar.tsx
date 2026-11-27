@@ -109,7 +109,16 @@ export default function TopBar({ onShare, onExport, onLibrary, onHelp, onNew }: 
             {boardName}
           </button>
         )}
-        <span className={`save-state ${dirty ? 'dirty' : 'saved'}`}>
+        <span
+          className={`save-state ${dirty ? 'dirty' : 'saved'}`}
+          title={
+            dirty
+              ? 'Not saved yet. If this board holds large images your browser storage may be full — export a board file instead.'
+              : lastSavedAt
+                ? `Saved in this browser at ${new Date(lastSavedAt).toLocaleTimeString()}`
+                : 'Draft'
+          }
+        >
           {dirty ? <CloudOff size={13} /> : <Cloud size={13} />}
           {dirty ? 'Unsaved' : lastSavedAt ? 'Saved' : 'Draft'}
         </span>

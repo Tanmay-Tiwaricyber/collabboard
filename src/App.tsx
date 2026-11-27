@@ -41,33 +41,34 @@ export default function App() {
     booted.current = true;
     const route = parseRoute();
     const store = useBoard.getState();
+    // A shared link is new content, so never resume the previous local board.
     if (route.kind === 'share') {
       const doc = documentFromShare(route.payload);
       useBoard.setState({
         elements: hydrateArrows(doc.elements),
         boardName: doc.name,
         boardId: doc.id,
+        history: [],
+        future: [],
         app: { ...store.app, ...doc.appState, theme: doc.appState.theme, selection: [] },
         dirty: true,
       });
       setShared(true);
       notify('Shared board loaded — it is yours to edit. Use Save to keep a copy.', 'success');
     } else if (route.kind === 'local') {
-      const doc = readBoard(route.id);
-      if (doc) {
+      // Only restore a board that exists; otherwise start clean.
+      if (readBoard(route.id)) {
         store.loadBoard(route.id);
         notify('Board restored from this browser');
       } else {
         notify('That board link is not in this browser — starting a new board.', 'error');
+        useBoard.getState().newBoard();
       }
     } else {
-      const index = loadIndex();
-      if (index.length) {
-        const last = readBoard(index[0].id);
-        if (last) {
-          store.loadBoard(index[0].id);
-          notify(`Reopened “${last.name}”`);
-        }
+      const last = loadIndex()[0];
+      if (last && readBoard(last.id)) {
+        store.loadBoard(last.id);
+        notify(`Reopened “${last.name}”`);
       }
     }
     // present-menu event from toolbar

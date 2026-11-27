@@ -87,7 +87,7 @@ npm install
 npm run dev      # http://localhost:3000
 npm run build    # production bundle in dist/
 npm run preview  # serve the production build
-npm run check    # typecheck + headless render smoke tests
+npm run check    # typecheck + headless render & interaction smoke tests
 ```
 
 ## Keyboard shortcuts
@@ -123,7 +123,14 @@ src/
   utils/export.ts        PNG / SVG / PDF / PPTX / JSON / clipboard
   utils/share.ts         link compression, routing, clipboard helpers
   components/            Canvas, Toolbar, TopBar, panels, dialogs
-scripts/                 headless render smoke tests
+scripts/
+  smoke.ts               model/bounds/hit-test/share round-trip checks
+  canvas-smoke.ts        renders every element type, verifies the DPR transform
+  dom-smoke.tsx          mounts the app in jsdom and drives real pointer input:
+                         draws ink, shapes, bound arrows, moves, resizes,
+                         rotates, edits text, erases, zooms, undoes, exports
+                         PNG/PDF/PPTX and opens present mode
+  sample.ts / ui-preview.tsx   generate a sample board SVG and a static UI page
 ```
 
 ## Licence

@@ -136,12 +136,11 @@ export default function Canvas() {
       canvas.width = Math.floor(w * dpr);
       canvas.height = Math.floor(h * dpr);
     }
-    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     const ordered = [...els].sort((p, q) => (p.index ?? 0) - (q.index ?? 0));
     renderScene(
       ctx,
       ordered,
-      { zoom: a.zoom, scrollX: a.scrollX, scrollY: a.scrollY, width: w, height: h },
+      { zoom: a.zoom, scrollX: a.scrollX, scrollY: a.scrollY, width: w, height: h, pixelRatio: dpr },
       {
         theme: a.theme,
         selectionColor: '#6d5efc',

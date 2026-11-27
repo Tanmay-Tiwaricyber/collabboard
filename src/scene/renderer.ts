@@ -482,10 +482,19 @@ export function drawBackground(
 export function renderScene(
   ctx: CanvasRenderingContext2D,
   elements: BoardElement[],
-  view: { zoom: number; scrollX: number; scrollY: number; width: number; height: number },
+  view: {
+    zoom: number;
+    scrollX: number;
+    scrollY: number;
+    width: number;
+    height: number;
+    /** device pixel ratio the backing store was sized with */
+    pixelRatio?: number;
+  },
   opts: RenderOptions,
 ) {
-  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  const dpr = view.pixelRatio ?? 1;
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   drawBackground(
     ctx,
     view.width,
@@ -496,14 +505,14 @@ export function renderScene(
     opts.pattern ?? 'dots',
     opts.theme,
   );
-  ctx.setTransform(view.zoom, 0, 0, view.zoom, view.scrollX, view.scrollY);
+  ctx.setTransform(dpr * view.zoom, 0, 0, dpr * view.zoom, dpr * view.scrollX, dpr * view.scrollY);
   const frames = elements.filter((e) => e.type === 'frame');
   const rest = elements.filter((e) => e.type !== 'frame');
   for (const el of [...frames, ...rest]) {
     if (el.width === 0 && el.height === 0 && el.type !== 'freedraw') continue;
     drawElement(ctx, el, opts);
   }
-  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 }
 
 /* ------------------------- svg export --------------------------- */

@@ -455,10 +455,10 @@ html[data-theme='dark'] .tool-btn.active {
 /* ========================= PROPERTIES =========================== */
 .properties-panel {
   position: absolute;
-  top: 14px;
+  top: 64px;
   left: 14px;
   width: 252px;
-  max-height: calc(100% - 120px);
+  max-height: calc(100% - 170px);
   overflow-y: auto;
   background: var(--surface);
   border: 1px solid var(--border);

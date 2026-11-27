@@ -50,6 +50,9 @@ f.points = [[0, 0], [10, 20], [30, 40]]; f.pressures = [0.2, 0.6, 0.9]; f.drawTy
 els.forEach((e, i) => (e.index = i));
 
 let fails = 0;
+const check = (name: string, cond: boolean, extra = '') => {
+  if (!cond) { fails++; console.error('FAIL', name, extra); } else console.log('ok  ', name);
+};
 try {
   drawBackground(ctx, 800, 600, 1.5, 20, 30, 'grid', 'dark');
   drawBackground(ctx, 800, 600, 0.01, 0, 0, 'dots', 'light');
@@ -68,6 +71,27 @@ try {
   fails++;
   console.error('RENDER THREW:', err);
 }
+/* DPR regression: with a 2x backing store the scene transform must include the
+   ratio, otherwise the board would render into a quarter of the canvas. */
+const transforms: number[][] = [];
+const tctx = new Proxy({} as any, {
+  get(_t, prop: string) {
+    if (prop === 'canvas') return { width: 1600, height: 1200 };
+    if (prop === 'measureText') return () => ({ width: 20 });
+    if (prop === 'setTransform') return (...a: number[]) => transforms.push(a);
+    return () => {};
+  },
+  set() { return true; },
+});
+drawBackground(tctx, 1600, 1200, 1, 0, 0, 'dots', 'light');
+transforms.length = 0;
+renderScene(tctx, els.slice(0, 3), { zoom: 1.5, scrollX: 30, scrollY: 20, width: 800, height: 600, pixelRatio: 2 }, { theme: 'light', selectionColor: '#000' });
+// transforms: [background @dpr, scene @dpr*zoom, restore @dpr]
+const sceneT = transforms[1];
+check('dpr included in scene transform', !!sceneT && sceneT[0] === 3 && sceneT[3] === 3, JSON.stringify(transforms));
+check('scene translate scaled by dpr', !!sceneT && sceneT[4] === 60 && sceneT[5] === 40, JSON.stringify(sceneT));
+check('restore keeps dpr', transforms[2]?.[0] === 2, JSON.stringify(transforms[2]));
+
 console.log('canvas ops:', Object.entries(calls).sort().map(([k, v]) => `${k}=${v}`).join(' '));
 const painted = (calls.stroke ?? 0) + (calls.fill ?? 0);
 if (painted < 20) { fails++; console.error('FAIL: too little painting', painted); }
