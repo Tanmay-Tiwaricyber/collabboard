@@ -130,7 +130,7 @@ scripts/
                          draws ink, shapes, bound arrows, moves, resizes,
                          rotates, edits text, erases, zooms, undoes, exports
                          PNG/PDF/PPTX and opens present mode
-  sample.ts / ui-preview.tsx   generate a sample board SVG and a static UI page
+  sample.ts              renders a sample board to SVG + PNG
 ```
 
 ## Licence
