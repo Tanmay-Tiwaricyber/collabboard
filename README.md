@@ -48,6 +48,12 @@ Draw with a pressure-sensitive pen, pencil or highlighter, drop in shapes, arrow
 | **Copy to clipboard** | paste the board straight into chat/docs |
 | **Board file (JSON)** | re-importable backup via *Boards → Import* |
 
+### Live cursors 🧪 *(experimental)*
+- A **room code** turns on presence: remote cursors tinted per person, their name badge, the tool they're holding, their current selection outline, and **their strokes appearing live** as they draw.
+- Invite links carry both the board and the room (`?room=…`), so a guest lands on the right board and shows up instantly.
+- **No account and no server**: presence flows over a same-origin `BroadcastChannel`, with heartbeats, 7-second peer expiry, cursor throttling (faster while drawing) and clock-skew guards. Open the invite in a second window to see it work.
+- Built behind a single session object (`src/utils/live.ts`) so the transport can be swapped for WebRTC or a WebSocket relay without touching the UI.
+
 ### Sharing
 - **Share link** — the entire board is LZ-compressed into the URL hash. No server, no account, works forever, stays private.
 - **QR code**, X / WhatsApp / email intents and a copyable edit link.
@@ -130,6 +136,8 @@ scripts/
                          draws ink, shapes, bound arrows, moves, resizes,
                          rotates, edits text, erases, zooms, undoes, exports
                          PNG/PDF/PPTX and opens present mode
+  live-smoke.tsx         two peers over a real BroadcastChannel: presence,
+                         cursors, selections, live ink, throttling, expiry
   sample.ts              renders a sample board to SVG + PNG
 ```
 

@@ -11,6 +11,7 @@ const { window: win } = dom;
 (globalThis as any).window = win;
 (globalThis as any).document = win.document;
 (globalThis as any).localStorage = win.localStorage;
+(globalThis as any).BroadcastChannel = globalThis.BroadcastChannel;
 (globalThis as any).FileReader = class {
   onload: any = null;
   onerror: any = null;
@@ -466,6 +467,35 @@ await drag(200, 720, 300, 760);
 await flush(10);
 check('auto-switch mode still available', useBoard.getState().app.tool === 'select', useBoard.getState().app.tool);
 useBoard.getState().setApp({ lockTool: true });
+
+// 21) experimental live cursors UI
+await act(async () => {
+  win.dispatchEvent(new win.KeyboardEvent('keydown', { key: 'l', ctrlKey: true, shiftKey: true, bubbles: true }));
+});
+await flush(60);
+check('live dialog opens', win.document.querySelector('.live-modal') !== null);
+const roomCode = win.document.querySelector('.room-code code')?.textContent ?? '';
+check('room code shown', /[a-z]+-[a-z0-9]{4}/.test(roomCode), roomCode);
+const inviteValue = (win.document.querySelector('.share-link-row input') as HTMLInputElement | null)?.value ?? '';
+check('invite link carries room + board', inviteValue.includes('room=') && inviteValue.includes('#board='), inviteValue.slice(0, 90));
+const closeLive = win.document.querySelector('.live-modal .modal-head .ghost-btn.icon-only') as HTMLElement | null;
+if (closeLive) await act(async () => { closeLive.dispatchEvent(new win.MouseEvent('click', { bubbles: true })); });
+await flush(20);
+check('presence bar visible while live', win.document.querySelector('.live-bar') !== null);
+check('live overlay mounted', win.document.querySelector('.live-layer') !== null);
+
+// a second peer's cursor should appear as an overlay element
+const peerBC = new (globalThis as any).BroadcastChannel(`collabboard:live:${roomCode}`);
+peerBC.postMessage({
+  type: 'hello', id: 'peer-x', name: 'Asha', color: '#ff5c9d',
+  cursor: [120, 140], tool: 'pen', selection: [], ink: null, at: Date.now(),
+});
+await flush(120);
+check('peer cursor rendered', win.document.querySelectorAll('.live-cursor').length === 1);
+check('peer name badge rendered', (win.document.querySelector('.live-name')?.textContent ?? '').includes('Asha'),
+  win.document.querySelector('.live-name')?.textContent ?? '');
+check('avatar added to bar', win.document.querySelectorAll('.live-avatar').length >= 2);
+peerBC.close();
 
 console.log('\ndraw calls:', JSON.stringify(drawCalls));
 console.log(fails ? `${fails} FAILURES` : 'DOM smoke passed');

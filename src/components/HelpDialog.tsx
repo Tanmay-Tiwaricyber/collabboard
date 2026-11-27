@@ -26,6 +26,7 @@ const SHORTCUTS: [string, string][] = [
   ['Ctrl/⌘ C / V', 'Copy / paste (also images & text)'],
   ['Ctrl/⌘ S', 'Save to browser'],
   ['Ctrl/⌘ P', 'Present frames as slides'],
+  ['Ctrl/⌘ ⇧ L', 'Live cursors (experimental)'],
   ['Ctrl/⌘ 0', 'Reset zoom'],
   ['Ctrl/⌘ + / −', 'Zoom in / out'],
   ['Wheel / Trackpad', 'Pan canvas'],
@@ -48,6 +49,10 @@ const FEATURES: [string, string][] = [
   ['Share links', 'Whole board compressed into the URL (works with no server), plus QR and embed code.'],
   ['Libraries', 'Boards autosave in the browser with thumbnails you can reopen any time.'],
   ['Themes', 'Light and dark canvas with dot, grid or lined paper.'],
+  [
+    'Live cursors (experimental)',
+    'Share a room code and see other people’s cursors, selections and strokes — peer to peer, no account.',
+  ],
 ];
 
 export default function HelpDialog({ onClose }: { onClose: () => void }) {

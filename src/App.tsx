@@ -10,10 +10,13 @@ import ShareDialog from './components/ShareDialog';
 import BoardLibrary from './components/BoardLibrary';
 import HelpDialog from './components/HelpDialog';
 import PresentMode from './components/PresentMode';
+import LiveDialog from './components/LiveDialog';
+import LiveBar from './components/LiveBar';
 import Toast from './components/Toast';
 import { useBoard, readBoard } from './store/board';
 import { documentFromShare, parseRoute, clearRoute } from './utils/share';
 import { hydrateArrows } from './utils/bind';
+import { live, readRoomFromHash } from './utils/live';
 import { loadIndex } from './store/board';
 
 export default function App() {
@@ -22,6 +25,7 @@ export default function App() {
   const [showLibrary, setShowLibrary] = useState(false);
   const [showHelp, setShowHelp] = useState(false);
   const [presenting, setPresenting] = useState(false);
+  const [showLive, setShowLive] = useState(false);
   const [toast, setToast] = useState<{ message: string; kind?: 'info' | 'error' | 'success' } | null>(null);
   const [shared, setShared] = useState(false);
   const booted = useRef(false);
@@ -71,10 +75,22 @@ export default function App() {
         notify(`Reopened “${last.name}”`);
       }
     }
+    // experimental live cursors: an invite link carries ?room=…
+    const room = readRoomFromHash();
+    if (room && live.supported) {
+      live.start(room);
+      notify('Live cursors on — you are drawing with others', 'success');
+    }
+
     // present-menu event from toolbar
     const openPresent = () => setPresenting(true);
+    const openLive = () => setShowLive(true);
     window.addEventListener('collabboard:presentmenu', openPresent);
-    return () => window.removeEventListener('collabboard:presentmenu', openPresent);
+    window.addEventListener('collabboard:livemenu', openLive);
+    return () => {
+      window.removeEventListener('collabboard:presentmenu', openPresent);
+      window.removeEventListener('collabboard:livemenu', openLive);
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -125,6 +141,10 @@ export default function App() {
         e.preventDefault();
         setPresenting(true);
       }
+      if ((e.metaKey || e.ctrlKey) && e.shiftKey && e.key.toLowerCase() === 'l') {
+        e.preventDefault();
+        setShowLive(true);
+      }
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
@@ -153,6 +173,7 @@ export default function App() {
         <CanvasMenu />
         <PropertiesPanel />
         <QuickStyleBar />
+        <LiveBar onOpen={() => setShowLive(true)} />
         {shared && (
           <div className="shared-banner">
             Viewing a shared board — you can edit freely and save your own copy.
@@ -193,6 +214,7 @@ export default function App() {
         />
       )}
       {showHelp && <HelpDialog onClose={() => setShowHelp(false)} />}
+      {showLive && <LiveDialog onClose={() => setShowLive(false)} notify={notify} />}
       {presenting && <PresentMode onClose={() => setPresenting(false)} />}
       {toast && <Toast message={toast.message} kind={toast.kind} />}
     </div>

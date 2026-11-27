@@ -26,6 +26,8 @@ import { renderScene } from '../scene/renderer';
 import { boundsOfSelection, edgePoint, hydrateArrows, nearestBindable } from '../utils/bind';
 import ContextMenu, { type MenuState } from './ContextMenu';
 import { blobToDataUrl, renderToCanvas } from '../utils/export';
+import { live } from '../utils/live';
+import LiveCursors from './LiveCursors';
 
 type Handle = 'nw' | 'n' | 'ne' | 'e' | 'se' | 's' | 'sw' | 'w' | 'rotate';
 
@@ -103,6 +105,26 @@ export default function Canvas() {
 
   const elementsRef = useRef(useBoard.getState().elements);
   const appRef = useRef(useBoard.getState().app);
+
+  /* ---- experimental: publish our presence to other live viewers ---- */
+  useEffect(() => {
+    if (!live.enabled) return;
+    const publish = () => {
+      const st = useBoard.getState();
+      live.setTool(st.app.tool);
+      const rects = st.elements
+        .filter((e) => st.app.selection.includes(e.id))
+        .map((e) => {
+          const b = elementBounds(e);
+          return { x: b.x, y: b.y, width: b.width, height: b.height };
+        });
+      live.setSelection(rects);
+    };
+    publish();
+    return useBoard.subscribe((s, prev) => {
+      if (s.app.tool !== prev.app.tool || s.app.selection !== prev.app.selection) publish();
+    });
+  }, []);
 
   const drawRef = useRef<() => void>(() => {});
   const requestRender = useCallback(() => {
@@ -713,6 +735,7 @@ export default function Canvas() {
     const a = appRef.current;
     const scene = scenePoint(e.clientX, e.clientY);
     let it = interaction.current;
+    if (live.enabled) live.setCursor(scene);
 
     if (pointers.current.has(e.pointerId)) pointers.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
 
@@ -779,6 +802,7 @@ export default function Canvas() {
         store.setState({
           elements: elementsRef.current.map((x) => (x.id === el.id ? next : x)),
         });
+        if (live.enabled) live.setInk({ origin: [it.originX, it.originY], points: next.points });
         return;
       }
       if (el.type === 'arrow' || el.type === 'line') {
@@ -1032,6 +1056,7 @@ export default function Canvas() {
     const st = store.getState();
     if (it.kind === 'draw') {
       const el = it.el;
+      if (live.enabled) live.setInk(null);
       const tooSmall =
         (el.type === 'rectangle' || el.type === 'ellipse' || el.type === 'diamond' || el.type === 'frame') &&
         (Math.abs(el.width) < 4 || Math.abs(el.height) < 4);
@@ -1558,6 +1583,7 @@ export default function Canvas() {
       onContextMenu={onContextMenu}
       style={{ cursor: cursor || cursorFor, touchAction: 'none' }}
       onDragStart={(e) => e.preventDefault()}
+      onPointerLeave={() => live.setCursor(null)}
     >
       <canvas ref={canvasRef} ref-role="board" style={{ width: '100%', height: '100%', display: 'block' }} />
       <div ref={stageRef} className="stage-overlay" />
@@ -1590,6 +1616,7 @@ export default function Canvas() {
           }}
         />
       )}
+      <LiveCursors />
       {menu && <ContextMenu state={menu} onClose={() => setMenu(null)} />}
       <input
         id="image-input"

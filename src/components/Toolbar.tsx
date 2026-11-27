@@ -1,4 +1,5 @@
 import {
+  Radio,
   ArrowUpRight,
   Circle,
   Diamond,
@@ -122,6 +123,18 @@ export default function Toolbar() {
           {lockTool ? <Lock size={18} /> : <Unlock size={18} />}
           <span className="tool-tip">
             {lockTool ? 'Tool stays active' : 'Switch to Select after drawing'}
+          </span>
+        </button>
+        <button
+          className="tool-btn exp-btn"
+          onClick={() => window.dispatchEvent(new Event('collabboard:livemenu'))}
+          title="Live cursors — experimental"
+          aria-label="Live cursors (experimental)"
+        >
+          <Radio size={18} />
+          <span className="exp-dot" aria-hidden />
+          <span className="tool-tip">
+            Live cursors <kbd>⇧⌘L</kbd>
           </span>
         </button>
         <button
